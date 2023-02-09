@@ -1,4 +1,5 @@
 #include "Block.h"
+#include "timing.h"
 
 Block::Block(cudnnHandle_t handle, float* data, int N, int C, int H, int W, int intermediate_channels, int stride) : 
     handle(handle), input_data(data), intermediate_c(intermediate_channels), stride(stride) {
@@ -30,6 +31,7 @@ void Block::Forward() {
     conv1.SetAlgorithm();
     conv1.AllocateWorkspace();
     conv1.AllocateMemory();
+    printf("block-conv1\n");
     conv1.Forward();
     conv1.Free();
 
@@ -41,11 +43,13 @@ void Block::Forward() {
     batch_norm1.SetBatchNormDescriptor();
     batch_norm1.SetOutputDescriptor();
     batch_norm1.SetScaleAndBias();
+    printf("block-batchnorm1\n");
     batch_norm1.Forward();
     batch_norm1.Free();
 
     RELU relu1(handle, batch_norm1.GetOutputData());
     relu1.SetInputDescriptor(1, intermediate_c, new_h, new_w);
+    printf("block-relu1\n");
     relu1.Forward();
     relu1.Free();
     
@@ -58,6 +62,7 @@ void Block::Forward() {
     conv2.SetAlgorithm();
     conv2.AllocateWorkspace();
     conv2.AllocateMemory();
+    printf("block-conv2\n");
     conv2.Forward();
     conv2.Free();
 
@@ -66,11 +71,13 @@ void Block::Forward() {
     batch_norm2.SetBatchNormDescriptor();
     batch_norm2.SetOutputDescriptor();
     batch_norm2.SetScaleAndBias();
+    printf("block-batchnorm2\n");
     batch_norm2.Forward();
     batch_norm2.Free();
 
     RELU relu2(handle, batch_norm2.GetOutputData());
     relu2.SetInputDescriptor(1, intermediate_c, new_h, new_w);
+    printf("block-relu2\n");
     relu2.Forward();
     relu2.Free();
 
@@ -85,6 +92,7 @@ void Block::Forward() {
     add_identity<<<BLOCKS, THREADS>>>(output_data, identity_data, N);
     cudaDeviceSynchronize();
     
+    printf("block-relu3");
     RELU relu3(handle, output_data);
 }
 

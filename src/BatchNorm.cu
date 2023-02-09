@@ -1,4 +1,5 @@
 #include "BatchNorm.h"
+#include "timing.h"
 
 BatchNorm::BatchNorm() {}
 
@@ -72,7 +73,7 @@ void BatchNorm::Forward() {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    
+    starttime(2);
     cudaEventRecord(start);
     CUDNN_CALL(cudnnBatchNormalizationForwardInference(
         handle,
@@ -92,12 +93,13 @@ void BatchNorm::Forward() {
     ));
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
+    stoptime(2);
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     #if !DEBUG
-    printf("%f,", milliseconds);
+    printf("%f\n", milliseconds);
     #endif
 }
 

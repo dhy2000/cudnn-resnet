@@ -4,6 +4,8 @@
 #include "RELU.h"
 #include "Block.h"
 
+#include "timing.h"
+
 #define IMAGE_N 1
 #define IMAGE_C 3
 #define IMAGE_H 224
@@ -12,6 +14,12 @@
 #define ITERATIONS 1000
 
 int main() {
+    registertimer(1, "cudnn-conv");
+    registertimer(2, "cudnn-batchnorm");
+    registertimer(3, "cudnn-relu");
+    registertimer(4, "cudnn-pooling");
+    // registertimer(5, "add-identity");
+
     cudnnHandle_t cudnn;
     CUDNN_CALL(cudnnCreate(&cudnn));
 
@@ -32,6 +40,7 @@ int main() {
         convolution1.SetAlgorithm();
         convolution1.AllocateWorkspace();
         convolution1.AllocateMemory();
+        printf("conv1\n");
         convolution1.Forward();
         convolution1.Free();
         
@@ -42,12 +51,14 @@ int main() {
         batch_norm1.SetBatchNormDescriptor();
         batch_norm1.SetOutputDescriptor();
         batch_norm1.SetScaleAndBias();
+        printf("batchnorm1\n");
         batch_norm1.Forward();
         batch_norm1.Free();
 
          // ReLU 1
         RELU relu1(cudnn, batch_norm1.GetOutputData());
         relu1.SetInputDescriptor(1, 64, 112, 112);
+        printf("relu1\n");
         relu1.Forward();
         relu1.Free();
 
@@ -58,6 +69,7 @@ int main() {
         pooling1.SetPoolingDescriptor(3, 3, 2, 2);
         pooling1.SetOutputDescriptor(1, 64, 56, 56);
         pooling1.AllocateMemory();
+        printf("pooling1\n");
         pooling1.Forward();
         pooling1.Free();
 
@@ -79,7 +91,7 @@ int main() {
         Block block4(cudnn, block3.GetOutputData(), 1, 256, 14, 14, 512, 2);
         block4.Forward();
         
-        printf("\n");
+        printf("\nend %d\n", i);
     }
 
      // Cleanup

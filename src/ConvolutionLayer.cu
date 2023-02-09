@@ -1,4 +1,5 @@
 #include "ConvolutionLayer.h"
+#include "timing.h"
 
 ConvolutionLayer::ConvolutionLayer() {}
 
@@ -120,7 +121,7 @@ void ConvolutionLayer::Forward() {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    
+    starttime(1);
     cudaEventRecord(start);
     CUDNN_CALL(cudnnConvolutionForward(handle,
                                        &alpha, 
@@ -131,12 +132,13 @@ void ConvolutionLayer::Forward() {
                                        output_descriptor, output_data));
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
+    stoptime(1);
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     #if !DEBUG
-    printf("%f,", milliseconds);
+    printf("%f\n", milliseconds);
     #endif
 }
 

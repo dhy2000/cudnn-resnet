@@ -1,4 +1,5 @@
 #include "RELU.h"
+#include "timing.h"
 
 RELU::RELU() {}
 
@@ -49,7 +50,7 @@ void RELU::Forward() {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    
+    starttime(3);
     cudaEventRecord(start);
     CUDNN_CALL(cudnnActivationForward(handle,
                                       activation_descriptor,
@@ -61,12 +62,13 @@ void RELU::Forward() {
                                       input_data));
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
+    stoptime(3);
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
         
     #if !DEBUG
-    printf("%f,", milliseconds);
+    printf("%f\n", milliseconds);
     #endif
 }
 

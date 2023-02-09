@@ -1,4 +1,5 @@
 #include "PoolingLayer.h"
+#include "timing.h"
 
 PoolingLayer::PoolingLayer() {}
 
@@ -72,7 +73,7 @@ void PoolingLayer::Forward() {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-    
+    starttime(4);
     cudaEventRecord(start);
     CUDNN_CALL(cudnnPoolingForward(handle,
                                    pooling_descriptor,
@@ -82,12 +83,13 @@ void PoolingLayer::Forward() {
                                    output_descriptor, output_data));
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
+    stoptime(4);
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     #if !DEBUG
-    printf("%f,", milliseconds);
+    printf("%f\n", milliseconds);
     #endif
 }
 
